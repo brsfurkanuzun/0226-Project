@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="icon emojione-star" clip-path="url(#clip0_0_1670)">
+<path id="Vector" d="M15.5 6.3H9.775L8 0.75L6.225 6.3H0.5L5.125 9.725L3.375 15.25L8 11.825L12.625 15.25L10.85 9.7L15.5 6.3Z" fill="var(--fill-0, #FFCE31)"/>
+</g>
+<defs>
+<clipPath id="clip0_0_1670">
+<rect width="16" height="16" fill="white"/>
+</clipPath>
+</defs>
+</svg>

@@ -1,0 +1,385 @@
+{
+  "info": {
+    "name": "Bandage Ecommerce API",
+    "_postman_id": "bandage-ecommerce-collection-v1",
+    "description": "Workintech FE Ecommerce backend — all endpoints used in the Bandage project.\n\nBase URL: https://workintech-fe-ecommerce.onrender.com\n\nVariables:\n- {{baseUrl}} → https://workintech-fe-ecommerce.onrender.com\n- {{token}}   → JWT token (set automatically after login)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://workintech-fe-ecommerce.onrender.com",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "GET Products (default)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "var json = pm.response.json();",
+                  "pm.test('Has total', () => pm.expect(json).to.have.property('total'));",
+                  "pm.test('Has products array', () => pm.expect(json.products).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Fetch product list. Response: { total: Number, products: Array }\n\nEach product has: id, name, description, price, stock, store_id, category_id, rating, sell_count, images[{url,index}]"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Products (with pagination)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products?limit=25&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "limit",  "value": "25" },
+                { "key": "offset", "value": "0"  }
+              ]
+            },
+            "description": "Paginated product list. Use limit and offset for pagination."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Products (with filter)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products?filter=pamuk",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "filter", "value": "pamuk" }
+              ]
+            },
+            "description": "Filter products by search term."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "GET Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            },
+            "description": "Returns a list of all user roles.\nExpected response: [{id, name, code}]\n\n- id:1  → admin  (Yönetici)\n- id:2  → store  (Mağaza)\n- id:3  → customer (Müşteri)"
+          },
+          "response": [
+            {
+              "name": "200 OK – Role list",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "[{\"id\":1,\"name\":\"Yönetici\",\"code\":\"admin\"},{\"id\":2,\"name\":\"Mağaza\",\"code\":\"store\"},{\"id\":3,\"name\":\"Müşteri\",\"code\":\"customer\"}]"
+            }
+          ]
+        },
+        {
+          "name": "POST Signup – Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Customer\",\n  \"email\": \"testcustomer@example.com\",\n  \"password\": \"Test1234!\",\n  \"role_id\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["signup"]
+            },
+            "description": "Register a new customer account.\n\nValidation rules enforced by frontend:\n- name: required, min 3 chars\n- email: valid email format\n- password: min 8 chars, upper+lower+digit+special char\n- role_id: 3 (customer)"
+          },
+          "response": [
+            {
+              "name": "200 OK – User created",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\"message\":\"User created. Check your email for activation instructions.\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST Signup – Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Store Owner\",\n  \"email\": \"storeowner@example.com\",\n  \"password\": \"Store1234!\",\n  \"role_id\": 2,\n  \"store\": {\n    \"name\": \"Örnek Mağaza\",\n    \"phone\": \"05321234567\",\n    \"tax_no\": \"T1234V567890\",\n    \"bank_account\": \"TR330006100519786457841326\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["signup"]
+            },
+            "description": "Register a new store account.\n\nExtra store fields:\n- store.name: required, min 3 chars\n- store.phone: valid Turkish mobile number (05XXXXXXXXX)\n- store.tax_no: format TXXXXVXXXXXX\n- store.bank_account: valid Turkish IBAN (TR + 24 chars)"
+          },
+          "response": [
+            {
+              "name": "200 OK – User created",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\"message\":\"User created. Check your email for activation instructions.\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST Signup – Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin1234!\",\n  \"role_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["signup"]
+            },
+            "description": "Register a new admin account. Same payload as customer but with role_id: 1."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login – Customer (valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "  console.log('Token saved:', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@commerce.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Login with test customer account.\nOn success: saves token to {{token}} collection variable.\nResponse: { token, name, email, role_id }"
+          },
+          "response": [
+            {
+              "name": "200 OK – Login success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\"token\":\"eyJ...\",\"name\":\"Cust Omer\",\"email\":\"customer@commerce.com\",\"role_id\":\"3\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST Login – Store (valid)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"store@commerce.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Login with test store account."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login – Admin (valid)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@commerce.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Login with test admin account."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login – Wrong password (error)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@commerce.com\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Expected response: { message: 'Password is not correct!' }"
+          },
+          "response": [
+            {
+              "name": "401 – Wrong password",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\"message\":\"Password is not correct!\"}"
+            }
+          ]
+        },
+        {
+          "name": "GET Verify – Valid token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "  console.log('Renewed token saved:', json.token);",
+                  "}",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has user fields', () => {",
+                  "  pm.expect(json).to.have.property('name');",
+                  "  pm.expect(json).to.have.property('email');",
+                  "  pm.expect(json).to.have.property('token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "{{token}}", "description": "NO Bearer prefix — raw token only" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["verify"]
+            },
+            "description": "Verify an existing JWT token.\n\nOn success (200): returns { name, email, role_id, token } — the returned token is a RENEWED token; save it back to localStorage and Axios headers.\n\nOn failure (401): returns { message: 'Not verified' } — clear token from localStorage and Axios.\n\nIMPORTANT: Do NOT add 'Bearer' prefix to the Authorization header value."
+          },
+          "response": [
+            {
+              "name": "200 OK – Token valid, renewed",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\"name\":\"Cust Omer\",\"email\":\"customer@commerce.com\",\"role_id\":\"3\",\"token\":\"eyJ...renewed...\"}"
+            }
+          ]
+        },
+        {
+          "name": "GET Verify – Invalid token",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "invalidtoken123" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["verify"]
+            },
+            "description": "Expected: { message: 'Not verified' } — clear token from localStorage and Axios header."
+          },
+          "response": [
+            {
+              "name": "401 – Not verified",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\"message\":\"Not verified\"}"
+            }
+          ]
+        },
+        {
+          "name": "POST Signup – Validation Error (missing fields)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"AB\",\n  \"email\": \"not-an-email\",\n  \"password\": \"weak\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["signup"]
+            },
+            "description": "Example request that should fail frontend validation before ever reaching the backend:\n- name too short (< 3 chars)\n- invalid email\n- password too weak\n- missing role_id"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
