@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import HomePage from './pages/HomePage';
-import MobilePage from './pages/MobilePage';
 import SignupPage from './pages/SignupPage';
 import LoginPage  from './pages/LoginPage';
 import ShopPage          from './pages/ShopPage';
@@ -58,18 +57,7 @@ export default function App() {
     <ErrorBoundary>
       <Router>
         <Switch>
-          <Route exact path="/" render={() => (
-            <>
-              {/* Desktop: md breakpoint ve üzeri */}
-              <div className="hidden md:block">
-                <HomePage />
-              </div>
-              {/* Mobile: md breakpoint altı */}
-              <div className="block md:hidden">
-                <MobilePage />
-              </div>
-            </>
-          )} />
+          <Route exact path="/" component={HomePage} />
           <Route path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId" component={ProductDetailPage} />
           <Route path="/shop/:gender/:categoryName/:categoryId" component={ShopPage} />
           <Route path="/shop"        component={ShopPage} />

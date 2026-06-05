@@ -42,12 +42,12 @@ export default function TopBar() {
             </span>
           </a>
           <a
-            href="mailto:michelle.rivera@example.com"
+            href="mailto:furkan.uzun@example.com"
             className="flex items-center gap-[5px] text-white hover:text-[#23a6f0] transition-colors"
           >
             <Mail className="w-[16px] h-[16px] shrink-0" />
             <span className="font-montserrat font-bold text-[14px] tracking-[0.2px] whitespace-nowrap">
-              michelle.rivera@example.com
+              furkan.uzun@example.com
             </span>
           </a>
         </div>

@@ -111,7 +111,7 @@ export default function Footer() {
       <div className="bg-[#fafafa] w-full">
         <div className="max-w-[1050px] mx-auto px-4 py-[25px]">
           <p className="font-bold text-[#737373] text-[14px] tracking-[0.2px] leading-[24px]">
-            Made With Love By Finland All Right Reserved
+            Made With Love By Furkan Uzun All Right Reserved
           </p>
         </div>
       </div>

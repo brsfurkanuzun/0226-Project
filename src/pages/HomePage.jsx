@@ -9,6 +9,7 @@ import TopBar  from '../components/layout/TopBar';
 import Navbar  from '../components/layout/Navbar';
 import Footer  from '../components/layout/Footer';
 import api     from '../services/api';
+import { buildProductUrl } from '../utils/categoryUtils';
 
 /* ── Image assets ────────────────────────────────────────────────── */
 const imgHero          = '/images/hero.png';
@@ -51,7 +52,7 @@ function ProductCard({ product }) {
   const price = product?.price ?? 0;
 
   return (
-    <Link to="/shop" className="group flex-1 min-w-[150px] max-w-[210px]">
+    <Link to={product ? buildProductUrl(product) : '/shop'} className="group w-full">
       <div className="bg-white hover:shadow-[0px_4px_24px_rgba(0,0,0,0.12)] transition-shadow rounded-[4px] overflow-hidden">
         <div className="relative h-[238px] overflow-hidden bg-[#f5f5f5]">
           <img
@@ -86,7 +87,7 @@ function ProductCard({ product }) {
         <div className="flex flex-col gap-[8px] items-center py-[25px] px-[15px] text-center font-montserrat font-bold">
           <p className="text-[#252b42] text-[16px] tracking-[0.1px] line-clamp-2 leading-[22px]">{name}</p>
           <div className="flex gap-[5px] text-[16px] tracking-[0.1px]">
-            <span className="text-[#23856d]">${price.toFixed(2)}</span>
+            <span className="text-[#23856d]">₺{price.toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -97,9 +98,9 @@ function ProductCard({ product }) {
 /* ── Blog card ──────────────────────────────────────────────────── */
 function BlogCard({ img }) {
   return (
-    <div className="flex bg-white shadow-sm rounded-[4px] overflow-hidden flex-1 min-w-[280px]">
+    <div className="flex flex-col sm:flex-row bg-white shadow-sm rounded-[4px] overflow-hidden flex-1 min-w-0 w-full">
       {/* Image column */}
-      <div className="relative w-[200px] flex-shrink-0">
+      <div className="relative w-full sm:w-[200px] h-[200px] sm:h-auto flex-shrink-0">
         <img
           alt=""
           src={img}
@@ -174,16 +175,21 @@ function BlogCard({ img }) {
 
 /* ── Page ───────────────────────────────────────────────────────── */
 export default function HomePage() {
-  const [topProducts, setTopProducts] = useState([]);
+  const [favoriteProducts, setFavoriteProducts] = useState([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/products', { params: { limit: 10, sort: 'rating:desc' } })
-      .then((res) => setTopProducts(res.data?.products ?? []))
-      .catch(() => {});
+    setFavoritesLoading(true);
+    api.get('/products', { params: { limit: 25, sort: 'rating:desc' } })
+      .then((res) => {
+        const sorted = [...(res.data?.products ?? [])]
+          .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+          .slice(0, 10);
+        setFavoriteProducts(sorted);
+      })
+      .catch(() => setFavoriteProducts([]))
+      .finally(() => setFavoritesLoading(false));
   }, []);
-
-  const row1 = topProducts.slice(0, 5);
-  const row2 = topProducts.slice(5, 10);
 
   return (
     <div className="bg-white flex flex-col w-full overflow-x-hidden font-montserrat">
@@ -196,9 +202,9 @@ export default function HomePage() {
           <div className="bg-gradient-to-r from-[#96e9fb] to-[#abecd6] rounded-[20px] flex flex-col md:flex-row items-center justify-between overflow-hidden min-h-[500px]">
 
             {/* Text */}
-            <div className="flex flex-col gap-[24px] items-start px-[60px] py-[60px] md:py-0 z-10 max-w-[460px]">
+            <div className="flex flex-col gap-[24px] items-start px-6 sm:px-[40px] lg:px-[60px] py-[40px] md:py-0 z-10 max-w-[460px]">
               <p className="font-bold text-[#2a7cc7] text-[16px] tracking-[0.1px]">SUMMER 2020</p>
-              <p className="font-bold text-[#252b42] text-[48px] md:text-[58px] leading-[1.15] tracking-[0.2px]">
+              <p className="font-bold text-[#252b42] text-[36px] sm:text-[48px] md:text-[58px] leading-[1.15] tracking-[0.2px]">
                 NEW COLLECTION
               </p>
               <p className="font-normal text-[#737373] text-[20px] tracking-[0.2px] leading-[30px]">
@@ -305,45 +311,39 @@ export default function HomePage() {
         </W>
       </section>
 
-      {/* ══ BESTSELLER PRODUCTS ═════════════════════════════════ */}
+      {/* ══ FAVORİ ÜRÜNLER (API — en yüksek puanlı 10) ═══════════ */}
       <section className="w-full bg-white py-[80px]">
         <W className="flex flex-col items-center gap-[40px]">
-          {/* Header */}
           <div className="text-center">
-            <p className="font-normal text-[#737373] text-[20px] tracking-[0.2px] leading-[30px]">Featured Products</p>
-            <p className="font-bold text-[#252b42] text-[24px] tracking-[0.1px] leading-[32px]">BESTSELLER PRODUCTS</p>
+            <p className="font-normal text-[#737373] text-[20px] tracking-[0.2px] leading-[30px]">Öne Çıkan</p>
+            <p className="font-bold text-[#252b42] text-[24px] tracking-[0.1px] leading-[32px]">FAVORİ ÜRÜNLER</p>
             <p className="font-normal text-[#737373] text-[14px] tracking-[0.2px] mt-[10px]">
-              Problems trying to resolve the conflict between
+              API&apos;den gelen en yüksek puanlı 10 ürün
             </p>
           </div>
 
-          {/* Grid row 1 */}
-          {row1.length > 0 ? (
-            <div className="flex flex-wrap gap-[20px] justify-center w-full">
-              {row1.map((p) => <ProductCard key={p.id} product={p} />)}
-            </div>
-          ) : (
-            /* skeleton while loading */
-            <div className="flex flex-wrap gap-[20px] justify-center w-full">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex-1 min-w-[150px] max-w-[210px] h-[320px] bg-[#f0f0f0] rounded-[4px] animate-pulse" />
+          {favoritesLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[20px] w-full">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="h-[320px] bg-[#f0f0f0] rounded-[4px] animate-pulse" />
               ))}
             </div>
-          )}
-          {/* Grid row 2 */}
-          {row2.length > 0 && (
-            <div className="flex flex-wrap gap-[20px] justify-center w-full">
-              {row2.map((p) => <ProductCard key={p.id} product={p} />)}
+          ) : favoriteProducts.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[20px] w-full">
+              {favoriteProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
+          ) : (
+            <p className="font-normal text-[#737373] text-[14px]">Ürünler yüklenemedi.</p>
           )}
 
-          {/* Load more */}
           <Link
             to="/shop"
             className="border border-[#23a6f0] px-[40px] py-[15px] rounded-[5px] hover:bg-[#23a6f0] transition-colors group"
           >
             <p className="font-bold text-[#23a6f0] text-[14px] tracking-[0.2px] group-hover:text-white">
-              LOAD MORE PRODUCTS
+              TÜM ÜRÜNLERİ GÖR
             </p>
           </Link>
         </W>

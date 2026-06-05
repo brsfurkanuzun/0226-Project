@@ -51,3 +51,11 @@ export function buildCategoryUrl(category) {
   const slug     = toSlug(cleanName || rawName);
   return `/shop/${gender}/${slug}/${category.id}`;
 }
+
+/** Build product detail URL from a product object */
+export function buildProductUrl(product) {
+  const gender       = genderSlug(product.gender) || 'all';
+  const categoryName = `kategori-${product.category_id}`;
+  const slug         = toSlug(product.name ?? '');
+  return `/shop/${gender}/${categoryName}/${product.category_id}/${slug}/${product.id}`;
+}

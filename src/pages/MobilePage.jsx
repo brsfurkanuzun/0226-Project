@@ -465,7 +465,7 @@ export default function MobilePage() {
           <div className="flex flex-col items-center mx-auto w-[414px]">
             <div className="font-montserrat font-bold text-[#737373] text-[14px] text-center tracking-[0.2px] whitespace-nowrap">
               <p className="leading-[24px] mb-0 whitespace-pre">{`Made With Love By `}</p>
-              <p className="leading-[24px] whitespace-pre">{`Finland All Right Reserved `}</p>
+              <p className="leading-[24px] whitespace-pre">{`Furkan Uzun All Right Reserved `}</p>
             </div>
           </div>
         </div>
