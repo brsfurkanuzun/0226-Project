@@ -12,20 +12,8 @@ import { fetchProduct } from '../store/actions/productActions';
 import { addToCart }    from '../store/actions/cartActions';
 import { FETCH_STATES } from '../store/reducers/productReducer';
 import { toast }        from 'react-toastify';
-
-/* ── Helpers ── */
-function toSlug(str = '') {
-  return str
-    .toLowerCase()
-    .replace(/[ğ]/g, 'g').replace(/[ü]/g, 'u').replace(/[ş]/g, 's')
-    .replace(/[ı]/g, 'i').replace(/[ö]/g, 'o').replace(/[ç]/g, 'c')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-function buildProductUrl(product) {
-  return `/shop/all/kategori-${product.category_id}/${product.category_id}/${toSlug(product.name)}/${product.id}`;
-}
+import api from '../services/api';
+import { buildProductUrl } from '../utils/categoryUtils';
 
 /* ── Star rating ── */
 function Stars({ rating, size = 16 }) {
@@ -71,8 +59,9 @@ export default function ProductDetailPage() {
   const dispatch = useDispatch();
 
   const { productDetail, detailFetchState } = useSelector((s) => s.product);
-  const relatedProducts = useSelector((s) => s.product.productList);
 
+  const [favoriteProducts, setFavoriteProducts] = useState([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [mainImgIdx,    setMainImgIdx]    = useState(0);
   const [selectedColor, setSelectedColor] = useState(COLOR_OPTS[0].value);
   const [selectedSize,  setSelectedSize]  = useState('');
@@ -90,14 +79,28 @@ export default function ProductDetailPage() {
   /* Reset image index when product changes */
   useEffect(() => { setMainImgIdx(0); }, [productDetail?.id]);
 
+  /* Favori ürünler — API'den en yüksek puanlı 10 */
+  useEffect(() => {
+    setFavoritesLoading(true);
+    api.get('/products', { params: { limit: 25, sort: 'rating:desc' } })
+      .then((res) => {
+        const sorted = [...(res.data?.products ?? [])]
+          .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+          .slice(0, 10);
+        setFavoriteProducts(sorted);
+      })
+      .catch(() => setFavoriteProducts([]))
+      .finally(() => setFavoritesLoading(false));
+  }, []);
+
   const isLoading = detailFetchState === FETCH_STATES.FETCHING
                  || detailFetchState === FETCH_STATES.NOT_FETCHED;
   const isFailed  = detailFetchState === FETCH_STATES.FAILED;
 
-  /* Related: same category, exclude current */
-  const related = relatedProducts
-    .filter((p) => p.category_id === productDetail?.category_id && p.id !== productDetail?.id)
-    .slice(0, 4);
+  /* Mevcut ürünü listeden çıkar */
+  const favorites = favoriteProducts.filter(
+    (p) => p.id !== Number(productDetail?.id)
+  );
 
   /* ── Layout shell (always shown) ── */
   return (
@@ -416,31 +419,51 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* ── RELATED PRODUCTS ── */}
-          {related.length > 0 && (
-            <div className="w-full bg-[#fafafa] py-16">
-              <div className="max-w-[1050px] mx-auto px-4">
-                <h2 className="font-bold text-[24px] text-[#252b42] tracking-[0.1px] mb-10 text-center">
-                  Benzer Ürünler
+          {/* ── FAVORİ ÜRÜNLER ── */}
+          <div className="w-full bg-[#fafafa] py-16">
+            <div className="max-w-[1050px] mx-auto px-4">
+              <div className="text-center mb-10">
+                <p className="font-normal text-[#737373] text-[20px] tracking-[0.2px] mb-2">Öne Çıkan</p>
+                <h2 className="font-bold text-[24px] text-[#252b42] tracking-[0.1px]">
+                  FAVORİ ÜRÜNLER
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-[30px]">
-                  {related.map((p) => (
+              </div>
+
+              {favoritesLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[20px]">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className="h-[280px] bg-[#f0f0f0] rounded-[4px] animate-pulse" />
+                  ))}
+                </div>
+              ) : favorites.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[20px]">
+                  {favorites.map((p) => (
                     <Link
                       key={p.id}
                       to={buildProductUrl(p)}
-                      className="bg-white flex flex-col items-start overflow-hidden group cursor-pointer hover:shadow-[0px_4px_24px_0px_rgba(0,0,0,0.12)] transition-shadow rounded-[4px]"
+                      className="bg-white flex flex-col overflow-hidden group cursor-pointer hover:shadow-[0px_4px_24px_0px_rgba(0,0,0,0.12)] transition-shadow rounded-[4px]"
                     >
-                      <div className="relative w-full h-[220px] bg-[#f9f9f9] overflow-hidden">
-                        {p.images?.[0]?.url
-                          ? <img src={p.images[0].url} alt={p.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                          : (
-                            <div className="absolute inset-0 flex items-center justify-center text-[#bdbdbd]">
-                              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
+                      <div className="relative w-full h-[200px] bg-[#f9f9f9] overflow-hidden">
+                        {p.images?.[0]?.url ? (
+                          <img
+                            src={p.images[0].url}
+                            alt={p.name}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-[#bdbdbd]">
+                            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                        {p.rating && (
+                          <div className="absolute top-2 left-2 bg-[#252b42] flex gap-1 items-center px-2 py-1 rounded-[20px]">
+                            <Heart className="w-3 h-3 text-[#e74040] fill-[#e74040]" />
+                            <span className="font-montserrat text-[11px] text-white">{p.rating.toFixed(1)}</span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col gap-1.5 items-center w-full py-4 px-3 text-center">
                         <p className="font-bold text-[14px] text-[#252b42] line-clamp-2 w-full">{p.name}</p>
@@ -449,9 +472,13 @@ export default function ProductDetailPage() {
                     </Link>
                   ))}
                 </div>
-              </div>
+              ) : (
+                <p className="text-center font-normal text-[14px] text-[#737373]">
+                  Favori ürün bulunamadı.
+                </p>
+              )}
             </div>
-          )}
+          </div>
         </>
       )}
 
